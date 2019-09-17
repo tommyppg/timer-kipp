@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>TIMER</title>
+	<style type="text/css">
+		.countdown{
+			text-align: center;
+			font-size: 30em;
+			font-family: 'Arial';
+			color: #16ff14;
+			height: 68vh;
+			padding: 3vh;
+		}
+		.button_box{
+			text-align: center;
+			height: 12vh;
+		}
+		.color_red{
+			color: red !important;
+		}
+		.color_yellow{
+			color: yellow !important;
+		}
+		body{
+			background: black;
+		}
+	</style>
+	<link rel="stylesheet" type="text/css" href="assets/btn.css">
+</head>
+<body>
+	<div class="countdown"></div>
+	<div class="button_box">
+		<button type="button" id="btn_start" class="btn-gradient orange large">Start</button>
+		<button type="button" id="btn_pause" class="btn-gradient orange large">Pause</button>
+		<button type="button" id="btn_reset" class="btn-gradient orange large">Reset</button>
+		<div style="color: white; font-family: 'Arial'; font-size: 25px; margin-top: 10px;">
+			Timer
+			<input type="text" name="timer_minute" id="timer_minute" style="height: 50px; width: 70px; font-size: 36px; text-align: center;" value="20">
+			<input type="text" name="timer_second" id="timer_second" style="height: 50px; width: 70px; font-size: 36px; text-align: center;" value="00">
+			Notif
+			<input type="text" name="timer_notification_minute" id="timer_notification_minute" style="height: 50px; width: 70px; font-size: 36px; text-align: center;" value="00">
+			<input type="text" name="timer_notification_second" id="timer_notification_second" style="height: 50px; width: 70px; font-size: 36px; text-align: center;" value="20">
+		</div>
+	</div>
+
+	<audio id="audioRing">
+		<source src="assets/ring.mp3" type="audio/mpeg">
+		Your browser does not support the audio element.
+	</audio>
+
+	<audio id="audioBell">
+		<source src="assets/bell.mp3" type="audio/mpeg">
+		Your browser does not support the audio element.
+	</audio>
+
+	<audio id="audioTone">
+		<source src="assets/tone.mp3" type="audio/mpeg">
+		Your browser does not support the audio element.
+	</audio>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script>
+		var initialTimer = "20:00"; //set timer disini
+		var timer2 = initialTimer; //untuk decrement timer
+		var interval = null; //object timer
+		var statusBell = false; //status bell pengingat
+		var isPaused = false; //status sedang di pause atau tidak
+		var notif_minute = 0;
+		var notif_second = 20;
+
+		//ambil audio object
+		var audioRing = document.getElementById("audioRing"); 
+		var audioBell = document.getElementById("audioBell"); 
+		var audioTone = document.getElementById("audioTone"); 
+
+		function start(){
+			interval = setInterval(function() {
+				if(!isPaused){// nika tidak pause, maka jalankan interval
+					var timer = timer2.split(':');
+					//by parsing integer, I avoid all extra string processing
+					var minutes = parseInt(timer[0], 10);
+					var seconds = parseInt(timer[1], 10);
+					--seconds;
+					minutes = (seconds < 0) ? --minutes : minutes;
+
+					//check apakah sudah 
+					if(minutes == 1 && seconds == 0 && !statusBell){
+						statusBell = true;
+						audioBell.play();
+					}
+
+					if (minutes < 0){
+						clearInterval(interval);
+						audioRing.play();
+						$('.countdown').removeClass('color_yellow');
+						$('.countdown').addClass('color_red');
+					}else{
+						if(minutes == notif_minute && (seconds >= 0 && seconds <= notif_second)){
+							audioTone.play();
+							$('.countdown').addClass('color_yellow');
+						}
+
+						seconds = (seconds < 0) ? 59 : seconds;
+						seconds = (seconds < 10) ? '0' + seconds : seconds;
+						minutes = (minutes < 10) ? '0' + minutes : minutes;
+
+						//minutes = (minutes < 10) ?  minutes : minutes;
+						$('.countdown').html(minutes + ':' + seconds);
+						timer2 = minutes + ':' + seconds;
+					}
+				}
+				
+				
+			}, 1000);
+		}
+		
+		$('#btn_start').click(function(){
+			//set panjang timer
+			initialTimer = $('#timer_minute').val()+":"+$('#timer_second').val();
+			timer2 = initialTimer;
+
+			//set notif timer
+			notif_minute = $('#timer_notification_minute').val();
+			notif_second = $('#timer_notification_second').val();
+
+			start();
+			$(this).prop('disabled', true);
+		});
+
+		$('#btn_pause').click(function(){
+			if(!isPaused){
+				isPaused = true;
+				$(this).html('Resume');
+			}else{
+				isPaused = false;
+				$(this).html('Pause');
+			}
+			
+		});
+
+		$('#btn_reset').click(function(){
+			//set panjang timer
+			initialTimer = $('#timer_minute').val()+":"+$('#timer_second').val();
+			timer2 = initialTimer;
+
+			//set notif timer
+			notif_minute = $('#timer_notification_minute').val();
+			notif_second = $('#timer_notification_second').val();
+
+
+			clearInterval(interval);
+			timer2 = initialTimer;
+			statusBell = false;
+			isPaused = false;
+			$('.countdown').html(initialTimer);
+			$('.countdown').removeClass('color_red');
+			$('.countdown').removeClass('color_yellow');
+			$('#btn_start').prop('disabled', false);
+		});
+
+		$('.countdown').html(initialTimer);
+	</script>
+
+</body>
+</html>
